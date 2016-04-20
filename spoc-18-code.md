@@ -1,4 +1,4 @@
-proc.c
+### proc.c
 
 ```c
     local_intr_save(intr_flag);
@@ -483,7 +483,7 @@ lab6_set_priority(uint32_t priority)
 }
 ```
 
-default_sched.c
+### default_sched.c
 ```c
 #include <defs.h>
 #include <list.h>
@@ -673,3 +673,8 @@ struct sched_class default_sched_class = {
      .proc_tick = stride_proc_tick,
 };
 ```
+###其他
+
+还有kern/sync/sync.h里的lock()也有调用schedule之处。
+
+以及kern/trap/trap.c里的trap()也调用了schedule。
