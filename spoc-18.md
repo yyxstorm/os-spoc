@@ -5,196 +5,11 @@
 请完成如下练习，完成代码填写，并形成spoc练习报告
 
 ```
-#include <defs.h>
-#include <list.h>
-#include <proc.h>
-#include <assert.h>
-#include <default_sched.h>
-
-#define USE_SKEW_HEAP 1
-
-/* You should define the BigStride constant here*/
-/* LAB6: YOUR CODE */
-#define BIG_STRIDE    0x7FFFFFFF /* ??? */
-
-/* The compare function for two skew_heap_node_t's and the
- * corresponding procs*/
-static int
-proc_stride_comp_f(void *a, void *b)
-{
-     struct proc_struct *p = le2proc(a, lab6_run_pool);
-     struct proc_struct *q = le2proc(b, lab6_run_pool);
-     int32_t c = p->lab6_stride - q->lab6_stride;
-     if (c > 0) return 1;
-     else if (c == 0) return 0;
-     else return -1;
-}
-
-/*
- * stride_init initializes the run-queue rq with correct assignment for
- * member variables, including:
- *
- *   - run_list: should be a empty list after initialization.
- *   - lab6_run_pool: NULL
- *   - proc_num: 0
- *   - max_time_slice: no need here, the variable would be assigned by the caller.
- *
- * hint: see proj13.1/libs/list.h for routines of the list structures.
- */
-static void
-stride_init(struct run_queue *rq) {
-     /* LAB6: YOUR CODE */
-     cprintf("[In stride_init]\n");
-     list_init(&(rq->run_list));
-     rq->lab6_run_pool = NULL;
-     rq->proc_num = 0;
-     cprintf("[Out stride_init]\n");
-}
-
-/*
- * stride_enqueue inserts the process ``proc'' into the run-queue
- * ``rq''. The procedure should verify/initialize the relevant members
- * of ``proc'', and then put the ``lab6_run_pool'' node into the
- * queue(since we use priority queue here). The procedure should also
- * update the meta date in ``rq'' structure.
- *
- * proc->time_slice denotes the time slices allocation for the
- * process, which should set to rq->max_time_slice.
- * 
- * hint: see proj13.1/libs/skew_heap.h for routines of the priority
- * queue structures.
- */
-static void
-stride_enqueue(struct run_queue *rq, struct proc_struct *proc) {
-     /* LAB6: YOUR CODE */
-     cprintf("[In stride_enqueue]\n");
-#if USE_SKEW_HEAP
-     rq->lab6_run_pool =
-          skew_heap_insert(rq->lab6_run_pool, &(proc->lab6_run_pool), proc_stride_comp_f);
-     cprintf("Insert PID == %d into the skew heap.\n", proc->pid);
-     cprintf("PID == %d 's stride == %u.\n", proc->pid, proc->lab6_stride);
-#else
-     assert(list_empty(&(proc->run_link)));
-     list_add_before(&(rq->run_list), &(proc->run_link));
-#endif
-     if (proc->time_slice == 0 || proc->time_slice > rq->max_time_slice) {
-          proc->time_slice = rq->max_time_slice;
-     }
-     proc->rq = rq;
-     rq->proc_num ++;
-     cprintf("[Out stride_enqueue]\n");
-}
-
-/*
- * stride_dequeue removes the process ``proc'' from the run-queue
- * ``rq'', the operation would be finished by the skew_heap_remove
- * operations. Remember to update the ``rq'' structure.
- *
- * hint: see proj13.1/libs/skew_heap.h for routines of the priority
- * queue structures.
- */
-static void
-stride_dequeue(struct run_queue *rq, struct proc_struct *proc) {
-     cprintf("[In stride_dequeue]\n");
-     /* LAB6: YOUR CODE */
-#if USE_SKEW_HEAP
-     rq->lab6_run_pool =
-          skew_heap_remove(rq->lab6_run_pool, &(proc->lab6_run_pool), proc_stride_comp_f);
-     cprintf("Remove PID == %d from the skew heap.\n", proc->pid);
-     cprintf("PID == %d 's stride == %u.\n", proc->pid, proc->lab6_stride);
-#else
-     assert(!list_empty(&(proc->run_link)) && proc->rq == rq);
-     list_del_init(&(proc->run_link));
-#endif
-     rq->proc_num --;
-     cprintf("[Out stride_dequeue]\n");
-}
-/*
- * stride_pick_next pick the element from the ``run-queue'', with the
- * minimum value of stride, and returns the corresponding process
- * pointer. The process pointer would be calculated by macro le2proc,
- * see proj13.1/kern/process/proc.h for definition. Return NULL if
- * there is no process in the queue.
- *
- * When one proc structure is selected, remember to update the stride
- * property of the proc. (stride += BIG_STRIDE / priority)
- *
- * hint: see proj13.1/libs/skew_heap.h for routines of the priority
- * queue structures.
- */
-static struct proc_struct *
-stride_pick_next(struct run_queue *rq) {
-     cprintf("[In stride_pick_next]\n");
-     /* LAB6: YOUR CODE */
-#if USE_SKEW_HEAP
-     cprintf("Picking next from a skew heap.\n");
-     if (rq->lab6_run_pool == NULL) { 
-         cprintf("No process to pick (NULL).\n");
-         return NULL; 
-     }
-     struct proc_struct *p = le2proc(rq->lab6_run_pool, lab6_run_pool);
-     cprintf("Pick PID == %d.\n", p->pid);
-     cprintf("PID == %d 's stride == %u.\n", p->pid, p->lab6_stride);
-#else
-     list_entry_t *le = list_next(&(rq->run_list));
-
-     if (le == &rq->run_list)
-          return NULL;
-     
-     struct proc_struct *p = le2proc(le, run_link);
-     le = list_next(le);
-     while (le != &rq->run_list)
-     {
-          struct proc_struct *q = le2proc(le, run_link);
-          if ((int32_t)(p->lab6_stride - q->lab6_stride) > 0)
-               p = q;
-          le = list_next(le);
-     }
-#endif
-     if (p->lab6_priority == 0)
-          p->lab6_stride += BIG_STRIDE;
-     else p->lab6_stride += BIG_STRIDE / p->lab6_priority;
-     cprintf("[Out stride_pick_next]\n");
-     return p;
-}
-
-/*
- * stride_proc_tick works with the tick event of current process. You
- * should check whether the time slices for current process is
- * exhausted and update the proc struct ``proc''. proc->time_slice
- * denotes the time slices left for current
- * process. proc->need_resched is the flag variable for process
- * switching.
- */
-static void
-stride_proc_tick(struct run_queue *rq, struct proc_struct *proc) {
-     cprintf("[In stride_pick_tick]\n");
-     cprintf("old time_slice == %d\n", proc->time_slice);
-     /* LAB6: YOUR CODE */
-     if (proc->time_slice > 0) {
-          proc->time_slice --;
-     }
-     if (proc->time_slice == 0) {
-          proc->need_resched = 1;
-     }
-     cprintf("new time_slice == %d\n", proc->time_slice);
-     cprintf("[Out stride_pick_tick]\n");
-}
-
-struct sched_class default_sched_class = {
-     .name = "stride_scheduler",
-     .init = stride_init,
-     .enqueue = stride_enqueue,
-     .dequeue = stride_dequeue,
-     .pick_next = stride_pick_next,
-     .proc_tick = stride_proc_tick,
-};
-
 (THU.CST) os is loading ...
 
 Special kernel symbols:
   entry  0xc010002a (phys)
-  etext  0xc010da7c (phys)
+  etext  0xc010db39 (phys)
   edata  0xc01b1dd4 (phys)
   end    0xc01b4f78 (phys)
 Kernel executable memory footprint: 724KB
@@ -208,7 +23,7 @@ ebp:0xc012ff88 eip:0xc0100101 args:0x00000000 0xffff0000 0xc012ffb4 0x0000002a
     kern/init/init.c:63: grade_backtrace1+38
 ebp:0xc012ffa8 eip:0xc010011f args:0x00000000 0xc010002a 0xffff0000 0x0000001d 
     kern/init/init.c:68: grade_backtrace0+23
-ebp:0xc012ffc8 eip:0xc0100144 args:0xc010da9c 0xc010da80 0x000031a4 0x00000000 
+ebp:0xc012ffc8 eip:0xc0100144 args:0xc010db5c 0xc010db40 0x000031a4 0x00000000 
     kern/init/init.c:73: grade_backtrace+34
 ebp:0xc012fff8 eip:0xc010007f args:0x00000000 0x00000000 0x0000ffff 0x40cf9a00 
     kern/init/init.c:32: kern_init+84
@@ -243,6 +58,7 @@ sched class: stride_scheduler
 [In stride_enqueue]
 Insert PID == 1 into the skew heap.
 PID == 1 's stride == 0.
+PID == 1 's priority == 0.
 [Out stride_enqueue]
 ide 0:      10000(sectors), 'QEMU HARDDISK'.
 ide 1:     262144(sectors), 'QEMU HARDDISK'.
@@ -297,178 +113,258 @@ swap_in: load disk swap entry 2 with swap_page in vadr 0x1000
 count is 5, total is 5
 check_swap() succeeded!
 ++ setup timer interrupts
+[Call schedule() in cpu_idle]
+[In schedule]
+Here we are scheduling!
 [In stride_pick_next]
 Picking next from a skew heap.
 Pick PID == 1.
 PID == 1 's stride == 0.
+PID == 1 's priority == 0.
 [Out stride_pick_next]
 [In stride_dequeue]
 Remove PID == 1 from the skew heap.
 PID == 1 's stride == 2147483647.
+PID == 1 's priority == 0.
 [Out stride_dequeue]
 [In stride_enqueue]
 Insert PID == 2 into the skew heap.
 PID == 2 's stride == 0.
+PID == 2 's priority == 0.
 [Out stride_enqueue]
+[Call schedule() in do_wait]
+[In schedule]
+Here we are scheduling!
 [In stride_pick_next]
 Picking next from a skew heap.
 Pick PID == 2.
 PID == 2 's stride == 0.
+PID == 2 's priority == 0.
 [Out stride_pick_next]
 [In stride_dequeue]
 Remove PID == 2 from the skew heap.
 PID == 2 's stride == 2147483647.
+PID == 2 's priority == 0.
 [Out stride_dequeue]
 kernel_execve: pid = 2, name = "exit".
 I am the parent. Forking the child...
 [In stride_enqueue]
 Insert PID == 3 into the skew heap.
 PID == 3 's stride == 0.
+PID == 3 's priority == 0.
 [Out stride_enqueue]
 I am parent, fork a child pid 3
 I am the parent, waiting now..
+[Call schedule() in do_wait]
+[In schedule]
+Here we are scheduling!
 [In stride_pick_next]
 Picking next from a skew heap.
 Pick PID == 3.
 PID == 3 's stride == 0.
+PID == 3 's priority == 0.
 [Out stride_pick_next]
 [In stride_dequeue]
 Remove PID == 3 from the skew heap.
 PID == 3 's stride == 2147483647.
+PID == 3 's priority == 0.
 [Out stride_dequeue]
 I am the child.
+[In schedule]
+Here we are scheduling!
 [In stride_enqueue]
 Insert PID == 3 into the skew heap.
 PID == 3 's stride == 2147483647.
+PID == 3 's priority == 0.
 [Out stride_enqueue]
 [In stride_pick_next]
 Picking next from a skew heap.
 Pick PID == 3.
 PID == 3 's stride == 2147483647.
+PID == 3 's priority == 0.
 [Out stride_pick_next]
 [In stride_dequeue]
 Remove PID == 3 from the skew heap.
 PID == 3 's stride == 4294967294.
+PID == 3 's priority == 0.
 [Out stride_dequeue]
+[Out schedule]
+[In schedule]
+Here we are scheduling!
 [In stride_enqueue]
 Insert PID == 3 into the skew heap.
 PID == 3 's stride == 4294967294.
+PID == 3 's priority == 0.
 [Out stride_enqueue]
 [In stride_pick_next]
 Picking next from a skew heap.
 Pick PID == 3.
 PID == 3 's stride == 4294967294.
+PID == 3 's priority == 0.
 [Out stride_pick_next]
 [In stride_dequeue]
 Remove PID == 3 from the skew heap.
 PID == 3 's stride == 2147483645.
+PID == 3 's priority == 0.
 [Out stride_dequeue]
+[Out schedule]
+[In schedule]
+Here we are scheduling!
 [In stride_enqueue]
 Insert PID == 3 into the skew heap.
 PID == 3 's stride == 2147483645.
+PID == 3 's priority == 0.
 [Out stride_enqueue]
 [In stride_pick_next]
 Picking next from a skew heap.
 Pick PID == 3.
 PID == 3 's stride == 2147483645.
+PID == 3 's priority == 0.
 [Out stride_pick_next]
 [In stride_dequeue]
 Remove PID == 3 from the skew heap.
 PID == 3 's stride == 4294967292.
+PID == 3 's priority == 0.
 [Out stride_dequeue]
+[Out schedule]
+[In schedule]
+Here we are scheduling!
 [In stride_enqueue]
 Insert PID == 3 into the skew heap.
 PID == 3 's stride == 4294967292.
+PID == 3 's priority == 0.
 [Out stride_enqueue]
 [In stride_pick_next]
 Picking next from a skew heap.
 Pick PID == 3.
 PID == 3 's stride == 4294967292.
+PID == 3 's priority == 0.
 [Out stride_pick_next]
 [In stride_dequeue]
 Remove PID == 3 from the skew heap.
 PID == 3 's stride == 2147483643.
+PID == 3 's priority == 0.
 [Out stride_dequeue]
+[Out schedule]
+[In schedule]
+Here we are scheduling!
 [In stride_enqueue]
 Insert PID == 3 into the skew heap.
 PID == 3 's stride == 2147483643.
+PID == 3 's priority == 0.
 [Out stride_enqueue]
 [In stride_pick_next]
 Picking next from a skew heap.
 Pick PID == 3.
 PID == 3 's stride == 2147483643.
+PID == 3 's priority == 0.
 [Out stride_pick_next]
 [In stride_dequeue]
 Remove PID == 3 from the skew heap.
 PID == 3 's stride == 4294967290.
+PID == 3 's priority == 0.
 [Out stride_dequeue]
+[Out schedule]
+[In schedule]
+Here we are scheduling!
 [In stride_enqueue]
 Insert PID == 3 into the skew heap.
 PID == 3 's stride == 4294967290.
+PID == 3 's priority == 0.
 [Out stride_enqueue]
 [In stride_pick_next]
 Picking next from a skew heap.
 Pick PID == 3.
 PID == 3 's stride == 4294967290.
+PID == 3 's priority == 0.
 [Out stride_pick_next]
 [In stride_dequeue]
 Remove PID == 3 from the skew heap.
 PID == 3 's stride == 2147483641.
+PID == 3 's priority == 0.
 [Out stride_dequeue]
+[Out schedule]
+[In schedule]
+Here we are scheduling!
 [In stride_enqueue]
 Insert PID == 3 into the skew heap.
 PID == 3 's stride == 2147483641.
+PID == 3 's priority == 0.
 [Out stride_enqueue]
 [In stride_pick_next]
 Picking next from a skew heap.
 Pick PID == 3.
 PID == 3 's stride == 2147483641.
+PID == 3 's priority == 0.
 [Out stride_pick_next]
 [In stride_dequeue]
 Remove PID == 3 from the skew heap.
 PID == 3 's stride == 4294967288.
+PID == 3 's priority == 0.
 [Out stride_dequeue]
+[Out schedule]
 [In stride_enqueue]
 Insert PID == 2 into the skew heap.
 PID == 2 's stride == 2147483647.
+PID == 2 's priority == 0.
 [Out stride_enqueue]
+[Call schedule() in do_exit]
+[In schedule]
+Here we are scheduling!
 [In stride_pick_next]
 Picking next from a skew heap.
 Pick PID == 2.
 PID == 2 's stride == 2147483647.
+PID == 2 's priority == 0.
 [Out stride_pick_next]
 [In stride_dequeue]
 Remove PID == 2 from the skew heap.
 PID == 2 's stride == 4294967294.
+PID == 2 's priority == 0.
 [Out stride_dequeue]
+[Out schedule]
 waitpid 3 ok.
 exit pass.
 [In stride_enqueue]
 Insert PID == 1 into the skew heap.
 PID == 1 's stride == 2147483647.
+PID == 1 's priority == 0.
 [Out stride_enqueue]
+[Call schedule() in do_exit]
+[In schedule]
+Here we are scheduling!
 [In stride_pick_next]
 Picking next from a skew heap.
 Pick PID == 1.
 PID == 1 's stride == 2147483647.
+PID == 1 's priority == 0.
 [Out stride_pick_next]
 [In stride_dequeue]
 Remove PID == 1 from the skew heap.
 PID == 1 's stride == 4294967294.
+PID == 1 's priority == 0.
 [Out stride_dequeue]
+[Out schedule]
+[Call schedule() in do_main]
+[In schedule]
+Here we are scheduling!
 [In stride_enqueue]
 Insert PID == 1 into the skew heap.
 PID == 1 's stride == 4294967294.
+PID == 1 's priority == 0.
 [Out stride_enqueue]
 [In stride_pick_next]
 Picking next from a skew heap.
 Pick PID == 1.
 PID == 1 's stride == 4294967294.
+PID == 1 's priority == 0.
 [Out stride_pick_next]
 [In stride_dequeue]
 Remove PID == 1 from the skew heap.
 PID == 1 's stride == 2147483645.
+PID == 1 's priority == 0.
 [Out stride_dequeue]
+[Out schedule]
 all user-mode processes have quit.
 init check memory pass.
 kernel panic at kern/process/proc.c:460:
