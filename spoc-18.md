@@ -2,7 +2,7 @@
 
 即在ucore运行过程中通过cprintf函数来完整地展现出来多个进程在调度算法和框架的支撑下，在相关调度点如何动态调度和执行的细节。(越全面细致越好)
 
-打印出来的信息如下，都括在方括号里。由这些信息可以知道，schedule会在idle、wait、exit等等时触发。ucore里的stride值其实应该是原论文里的pass值，而原论文里的stride在ucore里是用BIG_STRIDE/priority计算出来的。
+打印出来的信息如下，都括在方括号里。由这些信息可以知道，schedule会在处理idle、wait、exit等等时被调用。ucore里的stride值其实应该是原论文里的pass值，而原论文里的stride在ucore里是用BIG_STRIDE/priority计算出来的。
 ```
 (THU.CST) os is loading ...
 
