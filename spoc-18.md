@@ -8,7 +8,7 @@
 
 Special kernel symbols:
   entry  0xc010002a (phys)
-  etext  0xc010db39 (phys)
+  etext  0xc010db45 (phys)
   edata  0xc01b1dd4 (phys)
   end    0xc01b4f78 (phys)
 Kernel executable memory footprint: 724KB
@@ -22,7 +22,7 @@ ebp:0xc012ff88 eip:0xc0100101 args:0x00000000 0xffff0000 0xc012ffb4 0x0000002a
     kern/init/init.c:63: grade_backtrace1+38
 ebp:0xc012ffa8 eip:0xc010011f args:0x00000000 0xc010002a 0xffff0000 0x0000001d 
     kern/init/init.c:68: grade_backtrace0+23
-ebp:0xc012ffc8 eip:0xc0100144 args:0xc010db5c 0xc010db40 0x000031a4 0x00000000 
+ebp:0xc012ffc8 eip:0xc0100144 args:0xc010db7c 0xc010db60 0x000031a4 0x00000000 
     kern/init/init.c:73: grade_backtrace+34
 ebp:0xc012fff8 eip:0xc010007f args:0x00000000 0x00000000 0x0000ffff 0x40cf9a00 
     kern/init/init.c:32: kern_init+84
@@ -169,6 +169,7 @@ PID == 3 's stride == 2147483647.
 PID == 3 's priority == 0.
 [Out stride_dequeue]
 I am the child.
+[Call schedule() in trap]
 [In schedule]
 Here we are scheduling!
 [In stride_enqueue]
@@ -188,6 +189,7 @@ PID == 3 's stride == 4294967294.
 PID == 3 's priority == 0.
 [Out stride_dequeue]
 [Out schedule]
+[Call schedule() in trap]
 [In schedule]
 Here we are scheduling!
 [In stride_enqueue]
@@ -207,6 +209,7 @@ PID == 3 's stride == 2147483645.
 PID == 3 's priority == 0.
 [Out stride_dequeue]
 [Out schedule]
+[Call schedule() in trap]
 [In schedule]
 Here we are scheduling!
 [In stride_enqueue]
@@ -226,6 +229,7 @@ PID == 3 's stride == 4294967292.
 PID == 3 's priority == 0.
 [Out stride_dequeue]
 [Out schedule]
+[Call schedule() in trap]
 [In schedule]
 Here we are scheduling!
 [In stride_enqueue]
@@ -245,6 +249,7 @@ PID == 3 's stride == 2147483643.
 PID == 3 's priority == 0.
 [Out stride_dequeue]
 [Out schedule]
+[Call schedule() in trap]
 [In schedule]
 Here we are scheduling!
 [In stride_enqueue]
@@ -264,6 +269,7 @@ PID == 3 's stride == 4294967290.
 PID == 3 's priority == 0.
 [Out stride_dequeue]
 [Out schedule]
+[Call schedule() in trap]
 [In schedule]
 Here we are scheduling!
 [In stride_enqueue]
@@ -283,6 +289,7 @@ PID == 3 's stride == 2147483641.
 PID == 3 's priority == 0.
 [Out stride_dequeue]
 [Out schedule]
+[Call schedule() in trap]
 [In schedule]
 Here we are scheduling!
 [In stride_enqueue]
