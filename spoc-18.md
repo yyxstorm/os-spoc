@@ -2,7 +2,7 @@
 
 即在ucore运行过程中通过cprintf函数来完整地展现出来多个进程在调度算法和框架的支撑下，在相关调度点如何动态调度和执行的细节。(越全面细致越好)
 
-打印出来的信息如下，都括在方括号里。由这些信息可以知道，schedule会在被中断时（此时会根据current->need_resched的值判断是否需要schedule）、以及处理idle、wait、exit等等时也会调用schedule，还有lock的时候如果没拿到锁也会触发schedule。ucore里的stride值其实应该是原论文里的pass值，而原论文里的stride在ucore里是用BIG_STRIDE/priority计算出来的（可见priority就是tickets）。
+打印出来的信息如下，都括在方括号里。由这些信息可以知道，schedule会在被中断时（此时会根据current->need_resched的值判断是否需要schedule）、以及处理idle、wait、exit等等时也会调用schedule，还有lock的时候如果没拿到锁也会触发schedule。ucore里的stride值其实应该是原论文里的pass值，而原论文里的stride在ucore里是用BIG_STRIDE/lab6_priority计算出来的（可见lab6_priority就是tickets）。
 ```
 (THU.CST) os is loading ...
 
