@@ -1,5 +1,11 @@
 ## Bakery算法若去除choosing会如何
 
+答：若没有choosing，一种可能出错的情形如下：
+ - 为简单起见，设只有两个进程，且初始时NUM[i] == 0。
+ - 首先，两个进程都运行完`MAX(...)+1`一句，计算结果是`1`。
+ - PID较小的进程还未给`NUM[i]`赋值，而PID较大的进程先执行了对`NUM[i]`的赋值、且通过检验并进入临界区。
+ - PID较小的进程终于给`NUM[i]`赋值了，但由于`NUM[i]`都是1、且它的PID又较小，它也通过检验并进入临界区。
+
 ## 简化x86计算机模拟器上的同步算法
 
 1. （spoc）阅读[简化x86计算机模拟器的使用说明](https://github.com/chyyuu/ucore_lab/blob/master/related_info/lab7/lab7-spoc-exercise.md)，理解基于简化x86计算机的汇编代码。
