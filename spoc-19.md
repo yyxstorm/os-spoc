@@ -56,4 +56,4 @@
      ```
 
 - 能否设计新的硬件原子操作指令Compare-And-Swap,Fetch-And-Add？
- - 答：题目的意思是？看不懂。 
+ - 答：
