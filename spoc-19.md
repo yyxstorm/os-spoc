@@ -35,24 +35,25 @@
 
 #### 3. 了解software-based lock, hardware-based lock, [software-hardware-lock代码目录](https://github.com/chyyuu/ucore_lab/tree/master/related_info/lab7/software-hardware-locks)
 
-理解flag.s,peterson.s,test-and-set.s,ticket.s,test-and-test-and-set.s 请通过x86.py分析这些代码是否实现了锁机制？请给出你的实验过程和结论说明。能否设计新的硬件原子操作指令Compare-And-Swap,Fetch-And-Add？
-```
-Compare-And-Swap
+- 理解flag.s,peterson.s,test-and-set.s,ticket.s,test-and-test-and-set.s 请通过x86.py分析这些代码是否实现了锁机制？请给出你的实验过程和结论说明。
+ - 答：实现了，x86.py中有如下代码用来实现锁机制：
+     ```python
+     #
+     # SUPPORT FOR LOCKS
+     #
+     def atomic_exchange(self, src, value, reg1, reg2):
+         tmp                 = value + self.registers[reg1] + self.registers[reg2]
+         old                 = self.memory[tmp]
+         self.memory[tmp]    = self.registers[src]
+         self.registers[src] = old
+         return 0
+   
+     def fetchadd(self, src, value, reg1, reg2):
+         tmp                 = value + self.registers[reg1] + self.registers[reg2]
+         old                 = self.memory[tmp]
+         self.memory[tmp]    = self.memory[tmp] + self.registers[src] 
+         self.registers[src] = old
+     ```
 
-int CompareAndSwap(int *ptr, int expected, int new) {
-  int actual = *ptr;
-  if (actual == expected)
-    *ptr = new;
-  return actual;
-}
-```
-
-```
-Fetch-And-Add
-
-int FetchAndAdd(int *ptr) {
-  int old = *ptr;
-  *ptr = old + 1;
-  return old;
-}
-```
+- 能否设计新的硬件原子操作指令Compare-And-Swap,Fetch-And-Add？
+ - 答：题目的意思是？看不懂。 
