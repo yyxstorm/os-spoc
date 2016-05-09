@@ -25,7 +25,7 @@ cond_signal(cv) {
    }
 }
 ```
-不能<0，可能>1。
+不能<0，。
 
 #### (3-1) 目前的lab7-answer中管程的实现是Hansen管程类型还是Hoare管程类型？
 是Hoare类型。理由如下。
