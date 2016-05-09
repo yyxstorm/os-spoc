@@ -23,4 +23,21 @@ cond_signal(cv) {
    }
 }
 ```
-#### (3) 目前的lab7-answer中管程的实现是Hansen管程类型还是Hoare管程类型？请在lab7-answer中实现另外一种类型的管程。
+#### (3) 目前的lab7-answer中管程的实现是Hansen管程类型还是Hoare管程类型？
+是Hoare类型。理由如下。
+
+首先贴一下管程的一个方法的实现方式，如下。
+```
+routineA_in_mt () {
+    wait(mt.mutex);
+    ...
+    real body of routineA
+    ...
+    if(next_count>0)
+        signal(mt.next);
+    else
+        signal(mt.mutex);
+}
+```
+
+#### (4) 请在lab7-answer中实现另外一种类型的管程。
