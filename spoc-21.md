@@ -11,6 +11,8 @@ cond_wait (cv) {
     cv.count --;
  }
 ```
+不能<0，可能>1。
+
 #### (2) cvp->owner->next_count含义是什么？cvp->owner->next_count是否可能<0, 是否可能>1？请举例或说明原因。
 next_count的含义是“因为发出signal而进入sleep的进程个数”，这点从下面的代码可以看出。
 ```
@@ -23,6 +25,8 @@ cond_signal(cv) {
    }
 }
 ```
+不能<0，可能是0或1，不能>1。
+
 #### (3) 目前的lab7-answer中管程的实现是Hansen管程类型还是Hoare管程类型？
 是Hoare类型。理由如下。
 
