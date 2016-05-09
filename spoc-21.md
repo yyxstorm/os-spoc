@@ -39,5 +39,47 @@ routineA_in_mt () {
         signal(mt.mutex);
 }
 ```
+问题(2)中我们已经看到发出signal者会进入sleep，在调度器的帮助下这相当于切换到了请求信号者，....
 
 #### (4) 请在lab7-answer中实现另外一种类型的管程。
+```
+ * IMPLEMENTATION:
+ *   monitor mt {
+ *     ----------------variable------------------
+ *     semaphore mutex;
+ *     semaphore next;
+ *     int next_count;
+ *     condvar {int count, sempahore sem}  cv[N];
+ *     other variables in mt;
+ *     --------condvar wait/signal---------------
+ *     cond_wait (cv) {
+ *         cv.count ++;
+ *         if(mt.next_count>0)
+ *            signal(mt.next)
+ *         else
+ *            signal(mt.mutex);
+ *         wait(cv.sem);
+ *         cv.count --;
+ *      }
+ *
+ *      cond_signal(cv) {
+ *          if(cv.count>0) {
+ *             mt.next_count ++;
+ *             signal(cv.sem);
+ *             wait(mt.next);
+ *             mt.next_count--;
+ *          }
+ *       }
+ *     --------routines in monitor---------------
+ *     routineA_in_mt () {
+ *        wait(mt.mutex);
+ *        ...
+ *        real body of routineA
+ *        ...
+ *        if(next_count>0)
+ *            signal(mt.next);
+ *        else
+ *            signal(mt.mutex);
+ *     }
+ */
+```
