@@ -1,4 +1,16 @@
 #### (1) cvp->count含义是什么？cvp->count是否可能<0, 是否可能>1？请举例或说明原因。
+count的含义是“因为要等待一个条件而进入sleep的进程个数”，这点从下面代码可以看出。
+```
+cond_wait (cv) {
+    cv.count ++;
+    if(mt.next_count>0)
+       signal(mt.next)
+    else
+       signal(mt.mutex);
+    wait(cv.sem);
+    cv.count --;
+ }
+```
 #### (2) cvp->owner->next_count含义是什么？cvp->owner->next_count是否可能<0, 是否可能>1？请举例或说明原因。
 next_count的含义是“因为发出signal而进入sleep的进程个数”，这点从下面的代码可以看出。
 ```
