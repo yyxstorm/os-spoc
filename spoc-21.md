@@ -47,3 +47,7 @@ routineA_in_mt () {
 问题(2)中我们已经看到发出signal者会（A）进入sleep，在调度器的帮助下这相当于切换到了请求信号者（B），B执行完后`if`语句的前半部分`if(next_count>0) signal(mt.next)`将能唤醒A，而A结束后将执行`if`的后半部分`else signal(mt.mutex)`。这个流程正是Hoare方式的执行流程。
 
 #### (3-2) 请在lab7-answer中实现另外一种类型的管程。
+
+#### (4) 实现[银行家算法](https://github.com/chyyuu/ucore_lab/blob/master/related_info/lab7/deadlock/bankers-homework.py)（[参考输出](https://github.com/chyyuu/ucore_lab/blob/master/related_info/lab7/deadlock/example-output.txt)，在`YOUR CODE`处填代码）。可尝试改进执行效率。
+
+#### (5) 举一个银行家算法认为不安全但没有死锁的例子。
