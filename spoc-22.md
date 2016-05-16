@@ -180,7 +180,7 @@ data          [(.,0) (..,0) (g,1) (q,2) (u,3) (t,4) (n,7)] [(.,1) (..,0) (c,5) (
 #### 问题3：实现`soft link`机制，并设计测试用例说明你实现的正确性
 
 给`fs`类增加`doSoftLink`和`createSoftLink`函数。
-```
+```python
 ...
     ...
     def createSoftLink(self, target, newfile, parent):
