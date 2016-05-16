@@ -181,7 +181,51 @@ data          [(.,0) (..,0) (g,1) (q,2) (u,3) (t,4) (n,7)] [(.,1) (..,0) (c,5) (
 
 给`fs`类增加`doSoftLink`和`createSoftLink`函数。
 ```
+...
+    ...
+    def createSoftLink(self, target, newfile, parent):
+        parent_inode = self.inodes[self.nameToInum[parent]]
+        pdata = self.data[parent_inode.getAddr()]
+        if pdata.getFreeEntries() == 0:
+            return -1
+        if pdata.dirEntryExists(newfile):
+            return -1
+        inum = self.inodeAlloc()
+        pdata.addDirEntry(newfile, inum)
+        parent_inode.incRefCnt()
+        dnum = self.dataAlloc()
+        self.inodes[inum].setAll('f', dnum, 1)
+        self.data[dnum].setType('f')
+        self.data[dnum].addData('-> %s' % target)
+        return inum
+    ...
+    def doSoftLink(self):
+        # 和doLink几乎一模一样，就是把输出信息改了下而已
+        dprint('doSoftLink')
+        if len(self.files) == 0:
+            return -1
+        parent = self.dirs[int(random.random()* len(self.dirs))]
+        nfile = self.makeName()
 
+        # pick random target
+        target = self.files[int(random.random() * len(self.files))]
+
+        # get full name of newfile
+        if parent == '/':
+            fullName = parent + nfile
+        else:
+            fullName = parent + '/' + nfile
+
+        dprint('try createSoftLink(%s %s %s)' % (target, nfile, parent))
+        inum = self.createSoftLink(target, nfile, parent)
+        if inum >= 0:
+            self.files.append(fullName)
+            self.nameToInum[fullName] = inum
+            if printOps:
+                print 'softlink("%s", "%s");' % (target, fullName)
+            return 0
+        return -1
+...
 ```
 
 并把程序中的下面这个片段
