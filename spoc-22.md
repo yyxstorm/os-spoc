@@ -88,4 +88,93 @@ data          [(.,0) (..,0) (g,1) (q,2) (u,3) (t,4) (n,7)] [(.,1) (..,0) (c,5) (
 
 #### 问题2：在[sfs-homework.py 参考代码的基础上](https://github.com/chyyuu/ucore_lab/blob/master/related_info/lab8/sfs-homework.py)，实现 `writeFile, createFile, createLink, deleteFile`，使得你的实现能够达到与问题1的正确结果一致
 
+```python
+...
+    def deleteFile(self, tfile):
+        if printOps:
+            print 'unlink("%s");' % tfile
+
+        inum = self.nameToInum[tfile]
+
+        # YOUR CODE, YOUR ID
+        inode = self.inodes[inum]
+        inode.decRefCnt()
+        if inode.refCnt == 0:
+            if inode.getAddr() != -1:
+                self.dataFree(inode.getAddr())
+            self.inodeFree(inum)
+        parent_inode = self.inodes[
+            self.nameToInum[self.getParent(tfile)]
+        ]
+        parent_inode.decRefCnt()
+        self.data[parent_inode.getAddr()].delDirEntry(tfile)
+
+        # finally, remove from files list
+        self.files.remove(tfile)
+        return 0
+
+    def createLink(self, target, newfile, parent):
+
+        # YOUR CODE, YOUR ID
+        parent_inum = self.nameToInum[parent]
+        parent_data = self.data[
+            self.inodes[parent_inum].getAddr()
+        ]
+        if parent_data.getFreeEntries() == 0:
+            return -1
+        if parent_data.dirEntryExists(newfile):
+            return -1
+        target_inum = self.nameToInum[target]
+        self.inodes[target_inum].incRefCnt()
+        self.inodes[parent_inum].incRefCnt()
+        parent_data.addDirEntry(newfile, target_inum)
+
+        return target_inum
+
+    def createFile(self, parent, newfile, ftype):
+
+        # YOUR CODE, YOUR ID
+        parent_inum = self.nameToInum[parent]
+        parent_inode = self.inodes[parent_inum]
+        parent_data = self.data[parent_inode.getAddr()]
+        if parent_data.getFreeEntries() == 0:
+            return -1
+        if parent_data.dirEntryExists(newfile):
+            return -1
+        inum = self.inodeAlloc()
+        parent_inode.incRefCnt()
+        parent_data.addDirEntry(newfile, inum)
+        if ftype == 'd':
+            dnum = self.dataAlloc()
+            self.inodes[inum].setAll('d', dnum, 1)
+            data = self.data[dnum]
+            data.setType('d')
+            data.addDirEntry('.', inum)
+            data.addDirEntry('..', parent_inum)
+            self.inodes[inum].incRefCnt()
+        else:
+            self.inodes[inum].setType(ftype)
+
+        return inum
+
+    def writeFile(self, tfile, data):
+        inum = self.nameToInum[tfile]
+        curSize = self.inodes[inum].getSize()
+        dprint('writeFile: inum:%d cursize:%d refcnt:%d' % (
+            inum, curSize, self.inodes[inum].getRefCnt()))
+
+        # YOUR CODE, YOUR ID
+        if curSize == 1:  # is full
+            return -1
+        dnum = self.dataAlloc()
+        self.data[dnum].setType('f')
+        self.data[dnum].addData(data)
+        self.inodes[inum].setAddr(dnum)
+
+        if printOps:
+            print 'fd=open("%s", O_WRONLY|O_APPEND); write(fd, buf, BLOCKSIZE); close(fd);' % tfile
+        return 0
+...
+```
+
 #### 问题3：实现`soft link`机制，并设计测试用例说明你实现的正确性
